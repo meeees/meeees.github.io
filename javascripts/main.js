@@ -1,1 +1,1 @@
-console.log('This would be the main JS file.');
+console.log('If I wasn\'t lazy there might be some javascript here.');
