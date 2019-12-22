@@ -20,7 +20,7 @@ class Bug {
         this.lifetime = Math.floor(Math.random() * 200);
         this.radius -= Math.floor(Math.random() * 4);
         this.trailLength = this.radius;
-        this.ageEvery = Math.floor(Math.random() * 3000) + 5000;
+        this.ageEvery = Math.floor(Math.random() * 3000) + 0;
         this.ageTimer = this.ageEvery;
         this.maxAge = 16 + Math.floor(Math.random() * 3);
         this.dead = false;

@@ -11,32 +11,36 @@ const bugCountMin = 8;
 export const bugCountMax = 16;
 
 function tick(dt) {
-    var trySpawnKids = 0;
+    var trySpawnKids = [];
     for(var i = 0; i < bugs.length; i++)
     {
         var b = bugs[i];
         b.tick(dt);
         if(b.dead) {
             bugs.splice(i, 1);
-            trySpawnKids++;
+            trySpawnKids.push(b);
         }
     }
-    for(var i = 0; i < trySpawnKids; i++)
+    for(var i = 0; i < trySpawnKids.length; i++)
     {
+        var par = trySpawnKids[i];
         if(Math.random() > 0.5 && bugs.length < bugCountMax)
         {
-            var b = new Bug(Math.floor(Math.random() * WIDTH), Math.floor(Math.random() * HEIGHT))
+            var b = new Bug(par.pos.x, par.pos.y)
             bugs.push(b);
             console.log("Dead bug had first kid");
-            if(Math.random() > 0.5 && bugs.length < bugCountMax)
-            {
-                var b = new Bug(Math.floor(Math.random() * WIDTH), Math.floor(Math.random() * HEIGHT))
-                bugs.push(b);
-                console.log("Dead bug had second kid");
-            }
         }
-        else {
-            console.log("Dead bug had no kids");
+        if(Math.random() > 0.5 && bugs.length < bugCountMax)
+        {
+            var b2 = new Bug(par.pos.x, par.pos.y)
+            bugs.push(b2);
+            console.log("Dead bug had second kid");
+        }
+        if(Math.random() > 0.5 && bugs.length < bugCountMax)
+        {
+            var b3 = new Bug(par.pos.x, par.pos.y)
+            bugs.push(b3);
+            console.log("Dead bug had third kid");
         }
     }
     if(bugs.length < bugCountMin) {
