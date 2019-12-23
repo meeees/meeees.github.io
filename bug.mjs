@@ -4,21 +4,17 @@ import {Vector2} from './vector2.mjs';
 const maxAge = 16;
 
 class Bug {
-    
-    radius = 7;
-    trailLength = 7;
-    waggleScale = 0.5;
-    speed = 0.8;
-    trail = [];
-    pathDelta = 50;
-    remToPath = this.pathDelta;
-    lifetime = 0;
 
     constructor(x, y, size) {
         this.pos = new Vector2(x, y);
+        this.speed = 0.8;
+        this.trail = [];
+        this.pathDelta = 50;
+        this.remToPath = 50;
+        this.waggleScale = 0.5;
         // randomize the waggles
         this.lifetime = Math.floor(Math.random() * 200);
-        this.radius -= Math.floor(Math.random() * 4);
+        this.radius = 7 - Math.floor(Math.random() * 4);
         this.trailLength = this.radius;
         this.ageEvery = Math.floor(Math.random() * 3000) + 5000;
         this.ageTimer = this.ageEvery;
