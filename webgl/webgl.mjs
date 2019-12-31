@@ -187,7 +187,7 @@ function drawScene(gl, programInfo, buffers, dt) {
     const cube1Matrix = calcModelView([0.0, 0.0, -13.0], [rotation * 0.7, rotation * 0.7, 0]);
     const cube2Matrix = calcModelView([3.5, 0.0, -13.0], [rotation * 0.7, -rotation * 0.7, 0]);
     const cube3Matrix = calcModelView([-3.5, 0.0, -13.0], [-rotation * 0.7, rotation * 0.7, 0]);
-    const cube4Matrix = calcModelView([0.0, 3.5, -13.0], [-rotation * 0.7, rotation * 0.7, 0]);
+    const cube4Matrix = calcModelView([0.0, 3.5, -13.0], [rotation * 0.7, -rotation * 0.7, 0]);
     const cube5Matrix = calcModelView([3.5, 3.5, -13.0], [-rotation * 0.7, rotation * 0.7, 0]);
     const cube6Matrix = calcModelView([-3.5, 3.5, -13.0], [rotation * 0.7, rotation * 0.7, 0]);
     const cube7Matrix = calcModelView([0.0, -3.5, -13.0], [-rotation * 0.7, rotation * 0.7, 0]);
