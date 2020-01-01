@@ -1,17 +1,18 @@
 const vertShader = `
     attribute vec4 aVertexPosition;
+    attribute vec4 aVertexColor;
     attribute vec3 aVertexNormal;
-    attribute vec2 aTextureCoord;
 
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
     uniform mat4 uNormalMatrix;
 
+    varying lowp vec4 vColor;
     varying highp vec3 vLighting;
-    varying highp vec2 vTextureCoord;
 
     void main() {
         gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+        vColor = aVertexColor;
 
         highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
         highp vec3 directionalLightColor = vec3(1, 1, 1);
@@ -21,76 +22,38 @@ const vertShader = `
 
         highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
         vLighting = ambientLight + (directionalLightColor * directional);
-        vTextureCoord = aTextureCoord;
     }
 `;
 
 const fragShader = `
-    #extension GL_EXT_draw_buffers : require 
     varying highp vec3 vLighting;
-    varying highp vec2 vTextureCoord;
-
-    uniform sampler2D uSampler;
+    varying lowp vec4 vColor;
 
     void main() {
-        gl_FragData[0] = texture2D(uSampler, vTextureCoord) * vec4(vLighting, 1.0);
-        gl_FragData[1] = texture2D(uSampler, vTextureCoord);
+        gl_FragColor = vColor * vec4(vLighting, 1.0);
     }
 `;
 
-const screenVertShader = `
-    attribute vec2 aVertexPosition;
-    varying highp vec2 vTextureCoord;
-
-    void main() {
-        vTextureCoord = aVertexPosition * vec2(0.5, 0.5) + vec2(0.5, 0.5);
-        gl_Position = vec4(aVertexPosition, 0, 1);
-    }
-`
-
-const screenFragShader = `
-    uniform sampler2D uSampler;
-    varying highp vec2 vTextureCoord;
-
-    void main() {
-        gl_FragData[0] = texture2D(uSampler, vTextureCoord);
-    }
-`
-
-export function initPrograms(gl) {
-    const shaderProgram = initShaders(gl, vertShader, fragShader);
+export function initProgram(gl) {
+    const shaderProgram = initShaders(gl);
     const programInfo = {
         program: shaderProgram,
         attribLocations: {
             vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-            vertexTextureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
+            vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
             vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
         },
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
             normalMatrix: gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
-            uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
         },
     };
-    const screenShaderProgram = initShaders(gl, screenVertShader, screenFragShader);
-    const screenProgramInfo = {
-        program: screenShaderProgram,
-        attribLocations: {
-            vertexPosition: gl.getAttribLocation(screenShaderProgram, 'aVertexPosition'),
-        },
-        uniformLocations: {
-            uSampler: gl.getUniformLocation(screenShaderProgram, 'uSampler'),
-        }        
-    }
-    return {
-        objectInfo: programInfo,
-        screenInfo: screenProgramInfo,
-    } 
+    return programInfo;
 }
-function initShaders(gl, vShader, fShader) {
-    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vShader);
-    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fShader);
+function initShaders(gl) {
+    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vertShader);
+    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fragShader);
 
     const shaderProgram = gl.createProgram();
     gl.attachShader(shaderProgram, vertexShader);
