@@ -26,7 +26,9 @@ function main() {
         dContext.fillText('Your browser no like webgl, use better browser', 10, 10);
     }
 
-    bufferExt = gl.getExtension('WEBGL_draw_buffers');
+    bufferExt = bufferExt = gl.getExtension('WEBGL_draw_buffers') ||
+    gl.getExtension("GL_EXT_draw_buffers") ||
+    gl.getExtension("EXT_draw_buffers");
 
     shaderInfo = initPrograms(gl);
     buffers = Voxel.initBuffers(gl);
