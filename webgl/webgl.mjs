@@ -14,21 +14,16 @@ var voxels;
 var cameraPos = [0.0, 0.0, 6.0 ];
 var cameraRot = [0.0, 0.0, 0.0];
 
-var bufferExt;
 var renderTextures;
 
 function main() {
     canvas = document.getElementById('glCanvas');
-    gl = canvas.getContext('webgl');
+    gl = canvas.getContext('webgl2');
 
     if(gl === null) {
         const dContext = canvas.getContext('2d');
         dContext.fillText('Your browser no like webgl, use better browser', 10, 10);
     }
-
-    bufferExt = bufferExt = gl.getExtension('WEBGL_draw_buffers') ||
-    gl.getExtension("GL_EXT_draw_buffers") ||
-    gl.getExtension("EXT_draw_buffers");
 
     shaderInfo = initPrograms(gl);
     buffers = Voxel.initBuffers(gl);
@@ -72,7 +67,7 @@ function setupRenderTextures(gl) {
 
 
         
-        const attachmentPoint = bufferExt.COLOR_ATTACHMENT0_WEBGL;
+        const attachmentPoint = gl.COLOR_ATTACHMENT0;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, mainTexture, level);
     }
 
@@ -92,7 +87,7 @@ function setupRenderTextures(gl) {
 
 
         
-        const attachmentPoint = bufferExt.COLOR_ATTACHMENT1_WEBGL;
+        const attachmentPoint = gl.COLOR_ATTACHMENT1;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, collisionTexture, level);
     }
 
@@ -100,8 +95,7 @@ function setupRenderTextures(gl) {
     gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
-    bufferExt.drawBuffersWEBGL([bufferExt.COLOR_ATTACHMENT0_WEBGL, 
-        bufferExt.COLOR_ATTACHMENT1_WEBGL]);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
 
     return {
         framebuffer: fb,

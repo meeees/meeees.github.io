@@ -1,14 +1,15 @@
-const vertShader = `
-    attribute vec4 aVertexPosition;
-    attribute vec3 aVertexNormal;
-    attribute vec2 aTextureCoord;
+const vertShader = `#version 300 es
+
+    in vec4 aVertexPosition;
+    in vec3 aVertexNormal;
+    in vec2 aTextureCoord;
 
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
     uniform mat4 uNormalMatrix;
 
-    varying highp vec3 vLighting;
-    varying highp vec2 vTextureCoord;
+    out highp vec3 vLighting;
+    out highp vec2 vTextureCoord;
 
     void main() {
         gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
@@ -25,22 +26,26 @@ const vertShader = `
     }
 `;
 
-const fragShader = `
-    #extension GL_EXT_draw_buffers : require 
-    varying highp vec3 vLighting;
-    varying highp vec2 vTextureCoord;
+const fragShader = `#version 300 es
+    precision mediump float;
+    
+    in highp vec3 vLighting;
+    in highp vec2 vTextureCoord;
 
     uniform sampler2D uSampler;
 
+    layout(location = 0) out vec4 color;
+    layout(location = 1) out vec4 collision;
+
     void main() {
-        gl_FragData[0] = texture2D(uSampler, vTextureCoord) * vec4(vLighting, 1.0);
-        gl_FragData[1] = texture2D(uSampler, vTextureCoord);
+        color = texture(uSampler, vTextureCoord) * vec4(vLighting, 1.0);
+        collision = texture(uSampler, vTextureCoord);
     }
 `;
 
-const screenVertShader = `
-    attribute vec2 aVertexPosition;
-    varying highp vec2 vTextureCoord;
+const screenVertShader = `#version 300 es
+    in vec2 aVertexPosition;
+    out highp vec2 vTextureCoord;
 
     void main() {
         vTextureCoord = aVertexPosition * vec2(0.5, 0.5) + vec2(0.5, 0.5);
@@ -48,12 +53,15 @@ const screenVertShader = `
     }
 `
 
-const screenFragShader = `
+const screenFragShader = `#version 300 es
+    precision mediump float;
+
     uniform sampler2D uSampler;
-    varying highp vec2 vTextureCoord;
+    in highp vec2 vTextureCoord;
+    out vec4 color;
 
     void main() {
-        gl_FragData[0] = texture2D(uSampler, vTextureCoord);
+        color = texture(uSampler, vTextureCoord);
     }
 `
 
