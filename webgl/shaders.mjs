@@ -3,6 +3,7 @@ const vertShader = `#version 300 es
     in vec4 aVertexPosition;
     in vec3 aVertexNormal;
     in vec2 aTextureCoord;
+    in vec4 aFaceColor;
 
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
@@ -10,6 +11,7 @@ const vertShader = `#version 300 es
 
     out highp vec3 vLighting;
     out highp vec2 vTextureCoord;
+    out highp vec4 vFaceColor;
 
     void main() {
         gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
@@ -23,6 +25,7 @@ const vertShader = `#version 300 es
         highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
         vLighting = ambientLight + (directionalLightColor * directional);
         vTextureCoord = aTextureCoord;
+        vFaceColor = aFaceColor;
     }
 `;
 
@@ -31,6 +34,7 @@ const fragShader = `#version 300 es
     
     in highp vec3 vLighting;
     in highp vec2 vTextureCoord;
+    in highp vec4 vFaceColor;
 
     uniform sampler2D uSampler;
 
@@ -39,7 +43,7 @@ const fragShader = `#version 300 es
 
     void main() {
         color = texture(uSampler, vTextureCoord) * vec4(vLighting, 1.0);
-        collision = texture(uSampler, vTextureCoord);
+        collision = vFaceColor;
     }
 `;
 
@@ -73,6 +77,7 @@ export function initPrograms(gl) {
             vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
             vertexTextureCoord: gl.getAttribLocation(shaderProgram, 'aTextureCoord'),
             vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
+            faceColor: gl.getAttribLocation(shaderProgram, 'aFaceColor'),
         },
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),

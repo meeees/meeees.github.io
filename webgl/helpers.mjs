@@ -44,3 +44,21 @@ export function calcNormalMatrix(modelView)
     mat4.transpose(normalMatrix, normalMatrix);
     return normalMatrix;
 }
+
+export function rgbaToArray(val) 
+{
+    return [
+        (val & 0xff) / 255.0,
+        (val >> 8 & 0xff) / 255.0,
+        (val >> 16 & 0xff) / 255.0,
+        (val >> 24 & 0xff) / 255.0,
+    ];
+}
+
+export function arrayToRGBA(arr)
+{
+    return Math.round(arr[0]) | 
+        (Math.round(arr[1]) << 8) |
+        (Math.round(arr[2]) << 16) |
+        (Math.round(arr[3]) << 24);
+}

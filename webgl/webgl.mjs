@@ -1,6 +1,7 @@
 import {initPrograms} from './shaders.mjs';
 import {Voxel} from './voxels.mjs';
 import {calcModelView, bindFloatBuffer} from './helpers.mjs';
+import {InputManager} from './input.mjs';
 
 var mat4 = glMatrix.mat4;
 
@@ -11,19 +12,27 @@ var buffers;
 var screenBuffers;
 var voxels;
 
-var cameraPos = [0.0, 0.0, 6.0 ];
+var ghostVoxel;
+var ghostVisible = false;
+var targetedVoxel;
+var newVoxelColor = [100, 100, 100, 255];
+
+var cameraPos = [0.0, 0.0, 0.0 ];
 var cameraRot = [0.0, 0.0, 0.0];
+var cameraDist = 10.0;
 
 var renderTextures;
 
 function main() {
     canvas = document.getElementById('glCanvas');
-    gl = canvas.getContext('webgl2');
+    gl = canvas.getContext('webgl2', {alpha: false});
 
     if(gl === null) {
         const dContext = canvas.getContext('2d');
-        dContext.fillText('Your browser no like webgl, use better browser', 10, 10);
+        dContext.fillText('Your browser no like webgl2, use better browser', 10, 10);
     }
+
+    InputManager.initialize(canvas, addVoxel, removeVoxel, rotateCamera, zoomCamera);
 
     shaderInfo = initPrograms(gl);
     buffers = Voxel.initBuffers(gl);
@@ -35,6 +44,8 @@ function main() {
         new Voxel(gl, -1.0, -1.0, 0, [0, 0, 255, 255]),
         new Voxel(gl, -1.0, 0.0, 0, [255, 255, 255, 255]),
     ];
+
+    ghostVoxel = new Voxel(gl, 0, 0, 0, [255, 255, 255, 200], true);
     
     renderTextures = setupRenderTextures(gl);
 
@@ -97,8 +108,13 @@ function setupRenderTextures(gl) {
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
 
+    const cfb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, cfb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, collisionTexture, 0);
+
     return {
         framebuffer: fb,
+        collisionOnlyBuffer: cfb,
         mainTexture: mainTexture,
         collisionTexture: collisionTexture,
     };
@@ -125,11 +141,12 @@ function render(now) {
     curTime = now;
     drawScene(gl, shaderInfo.objectInfo, buffers, dt);
     drawScreen(gl, shaderInfo.screenInfo, screenBuffers, renderTextures.mainTexture);
-    var test = gl.getError();
+    checkMouseOver(gl);
+    /*var test = gl.getError();
     if(test != 0) 
     {
         console.log(test);
-    }
+    }*/
 
     requestAnimationFrame(render);
 }
@@ -140,6 +157,42 @@ function clearScreen(gl) {
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+}
+
+function checkMouseOver(gl)
+{
+    gl.bindFramebuffer(gl.FRAMEBUFFER, renderTextures.collisionOnlyBuffer);
+
+    var x = InputManager.mouseX;
+    var y = InputManager.mouseY;
+    var width = gl.canvas.clientWidth;
+    var height = gl.canvas.clientHeight;
+    var pixels = new Uint8Array(4);
+    // we are off the screeen
+    if (x < 0 || x >= width || y < 0 || y >= height)
+    {
+
+    }
+    else
+    {
+        gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        if(pixels[0] != 0 || pixels[1] != 0 || pixels[2] != 0)
+        {
+            var voxelInfo = Voxel.getVoxelByCol(pixels);
+            ghostVisible = true;
+            var newPos = voxelInfo.targetedSpace;
+            newPos = [newPos[0] + 0.05, newPos[1] + 0.05, newPos[2] + 0.05];
+            ghostVoxel.pos = newPos;
+            targetedVoxel = voxelInfo.voxel;
+        }
+        else {
+            ghostVisible = false;
+            targetedVoxel = null;
+        }
+    }
+
 }
 
 function getProjection(gl, fov) 
@@ -164,10 +217,14 @@ function getCameraMatrix(cameraPos, cameraRot)
 function drawScene(gl, programInfo, buffers, dt) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, renderTextures.framebuffer);
     clearScreen(gl);
-    cameraRot[1] += dt * 180 / Math.PI;
-    const cameraDist = 10.0;
-    cameraPos[0] = cameraDist * Math.sin(cameraRot[1] * Math.PI / 180);
-    cameraPos[2] = cameraDist * Math.cos(cameraRot[1] * Math.PI / 180);
+    //cameraRot[1] = 30;
+    const phi = cameraRot[0] * Math.PI / 180;
+    const theta = cameraRot[1] * Math.PI / 180;
+    cameraPos[0] = cameraDist * Math.sin(theta) * Math.cos(phi);
+    cameraPos[1] = -cameraDist * Math.sin(phi);
+    cameraPos[2] = cameraDist * Math.cos(theta) * Math.cos(phi);
+
+    //cameraPos[2] = cameraDist * Math.cos(cameraRot[1] * Math.PI / 180);
     //console.log(cameraPos);
 
     const projectionMatrix = getProjection(gl, 45);
@@ -179,6 +236,10 @@ function drawScene(gl, programInfo, buffers, dt) {
     {
         var v = voxels[i];
         v.drawVoxel(gl, programInfo);
+    }
+    if(ghostVisible)
+    {
+        ghostVoxel.drawVoxel(gl, programInfo);
     }
 }
 
@@ -192,6 +253,50 @@ function drawScreen(gl, programInfo, buffers, texture)
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+function addVoxel()
+{
+    if(ghostVisible)
+    {
+        var toAdd = new Voxel(gl, ghostVoxel.pos[0] - 0.05, ghostVoxel.pos[1] - 0.05, ghostVoxel.pos[2] - 0.05, newVoxelColor);
+        voxels.push(toAdd);
+    }
+}
+
+function removeVoxel()
+{
+    if(targetedVoxel != null && voxels.length > 1)
+    {
+        for(var i = 0; i < voxels.length; i++)
+        {
+            if(voxels[i].voxelIndex == targetedVoxel.voxelIndex)
+            {
+                voxels.splice(i, 1);
+                targetedVoxel.destroyVoxel();
+                break;
+            }
+        }
+    }
+}
+
+function rotateCamera(dx, dy)
+{
+    cameraRot[1] -= dx;
+    cameraRot[0] -= dy;
+}
+
+function zoomCamera(delta)
+{
+    cameraDist += delta * 0.05;
+    if(cameraDist < 2)
+    {
+        cameraDist = 2;
+    }
+    if(cameraDist > 100)
+    {
+        cameraDist = 100;
+    }
 }
 
 
