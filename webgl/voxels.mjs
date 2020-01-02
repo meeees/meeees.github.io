@@ -17,6 +17,7 @@ class Voxel {
         this.pos = [x, y, z];
         this.texture = makeColorTexture(gl, new Uint8Array(col));
         this.ghost = ghost;
+        this.col = col;
         if(!this.ghost)
         {
             this.voxelIndex = voxelCount;

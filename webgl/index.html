@@ -1,6 +1,7 @@
 <html>
     <head>
         <title>lol 3</title>
+        <link rel="stylesheet" type="text/css" href="style.css">
     </head>
     <body>
         <canvas id="glCanvas" width="600" height="600" style="border:1px solid #000000;"></canvas>
@@ -9,9 +10,31 @@
             import {run} from './webgl.mjs';
             run();
         </script>
-        <p>Click to add voxels</p>
-        <p>Hold alt and click to remove voxels</p>
-        <p>Scroll to zoom</p>
-        <p>Press middle mouse and drag to rotate</p>
+        <div class="row">
+            <div class="column">
+                <p>Click to add voxels</p>
+                <p>Hold alt and click to remove voxels</p>
+                <p>Scroll to zoom</p>
+                <p>Press middle mouse and drag to rotate</p>
+            </div>
+            <div class="column">
+                <p>Scroll these to choose the color, or hold ctrl and click to choose from the voxels</p>
+                <div class="slidecontainer">
+                    <input type="range" min="0" max="255" value="100" class="slider" id="rSlider">
+                    Red
+                </div>
+                <div class="slidecontainer">
+                    <input type="range" min="0" max="255" value="100" class="slider" id="gSlider">
+                    Green
+                </div>
+                <div class="slidecontainer">
+                    <input type="range" min="0" max="255" value="100" class="slider" id="bSlider">
+                    Blue
+                </div>
+            </div>
+            <div class="colorDisplay" id="colorDisplay">
+            </div>
+          </div>
+
     </body>
 </html>

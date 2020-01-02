@@ -3,7 +3,7 @@ class InputManager {
     static mouseX = 0;
     static mouseY = 0;
     static middleDown;
-    static initialize(canvas, addCallback, removeCallback, cameraCallback, zoomCallback)
+    static initialize(canvas, callbacks)
     {
         InputManager.mouseX = 0;
         InputManager.mouseY = 0;
@@ -13,20 +13,24 @@ class InputManager {
             InputManager.mouseY = mousePos.y;
             if(InputManager.middleDown)
             {
-                cameraCallback(evt.movementX, evt.movementY);
+                callbacks.cameraCallback(evt.movementX, evt.movementY);
             }
             //console.log(mousePos);
         });
         canvas.addEventListener('mousedown', function(evt) {
             if(evt.button == 0)
             {
-                if(evt.altKey)
+                if(evt.ctrlKey)
                 {
-                    removeCallback();
+                    callbacks.colorPickCallback();
+                }
+                else if(evt.altKey)
+                {
+                    callbacks.removeCallback();
                 }
                 else
                 {
-                    addCallback();
+                    callbacks.addCallback();
                 }
             }
             else if(evt.button == 1){
@@ -40,7 +44,7 @@ class InputManager {
             }
         });
         canvas.addEventListener('wheel', function(evt) {
-            zoomCallback(evt.deltaY);
+            callbacks.zoomCallback(evt.deltaY);
         })
     }
 

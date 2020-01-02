@@ -7,6 +7,7 @@ var mat4 = glMatrix.mat4;
 
 var canvas;
 var gl;
+var colorSliders;
 var shaderInfo;
 var buffers;
 var screenBuffers;
@@ -15,7 +16,6 @@ var voxels;
 var ghostVoxel;
 var ghostVisible = false;
 var targetedVoxel;
-var newVoxelColor = [100, 100, 100, 255];
 
 var cameraPos = [0.0, 0.0, 0.0 ];
 var cameraRot = [0.0, 0.0, 0.0];
@@ -26,13 +26,28 @@ var renderTextures;
 function main() {
     canvas = document.getElementById('glCanvas');
     gl = canvas.getContext('webgl2', {alpha: false});
+    colorSliders = {
+        r: document.getElementById('rSlider'),
+        g: document.getElementById('gSlider'),
+        b: document.getElementById('bSlider'),
+        display: document.getElementById('colorDisplay')
+    }
+    colorSliders.r.oninput = sliderUpdate;
+    colorSliders.g.oninput = sliderUpdate;
+    colorSliders.b.oninput = sliderUpdate;
+    sliderUpdate();
 
     if(gl === null) {
         const dContext = canvas.getContext('2d');
         dContext.fillText('Your browser no like webgl2, use better browser', 10, 10);
     }
 
-    InputManager.initialize(canvas, addVoxel, removeVoxel, rotateCamera, zoomCamera);
+    InputManager.initialize(canvas, {
+        addCallback: addVoxel,
+        removeCallback: removeVoxel,
+        colorPickCallback: pickColor,
+        cameraCallback: rotateCamera,
+        zoomCallback: zoomCamera });
 
     shaderInfo = initPrograms(gl);
     buffers = Voxel.initBuffers(gl);
@@ -259,7 +274,8 @@ function addVoxel()
 {
     if(ghostVisible)
     {
-        var toAdd = new Voxel(gl, ghostVoxel.pos[0] - 0.05, ghostVoxel.pos[1] - 0.05, ghostVoxel.pos[2] - 0.05, newVoxelColor);
+        var color = [colorSliders.r.value, colorSliders.g.value, colorSliders.b.value, 255];
+        var toAdd = new Voxel(gl, ghostVoxel.pos[0] - 0.05, ghostVoxel.pos[1] - 0.05, ghostVoxel.pos[2] - 0.05, color);
         voxels.push(toAdd);
     }
 }
@@ -297,6 +313,38 @@ function zoomCamera(delta)
     {
         cameraDist = 100;
     }
+}
+
+function sliderUpdate()
+{
+    colorSliders.display.style.backgroundColor = '' + fullColorHex(colorSliders.r.value, colorSliders.g.value, colorSliders.b.value);
+}
+
+function rgbToHex (rgb) { 
+    var hex = Number(rgb).toString(16);
+    if (hex.length < 2) {
+         hex = "0" + hex;
+    }
+    return hex;
+  }
+
+function fullColorHex(r,g,b) {   
+    var red = rgbToHex(r);
+    var green = rgbToHex(g);
+    var blue = rgbToHex(b);
+    return red+green+blue;
+}
+
+function pickColor()
+{
+    if(targetedVoxel != null)
+    {
+        var col = targetedVoxel.col;
+        colorSliders.r.value = col[0];
+        colorSliders.g.value = col[1];
+        colorSliders.b.value = col[2]; 
+    }
+    sliderUpdate();
 }
 
 
